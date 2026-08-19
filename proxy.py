@@ -125,6 +125,32 @@ async def _passthrough(request: Request, path: str):
     if BACKEND_API_KEY:
         headers["Authorization"] = f"Bearer {BACKEND_API_KEY}"
     body = await request.body()
+
+    # Check if this is a streaming request (OpenAI stream:true in body)
+    is_stream = False
+    if request.method == "POST" and body:
+        try:
+            parsed = json.loads(body)
+            is_stream = parsed.get("stream", False)
+        except Exception:
+            pass
+
+    if is_stream:
+        # Stream SSE response through as-is
+        async def _stream():
+            async with httpx.AsyncClient(timeout=httpx.Timeout(300.0)) as client:
+                async with client.stream(
+                    request.method,
+                    f"{BACKEND_URL}{path}",
+                    content=body,
+                    headers=headers,
+                    params=request.query_params,
+                ) as resp:
+                    async for chunk in resp.aiter_raw():
+                        yield chunk
+        return StreamingResponse(_stream(), media_type="text/event-stream")
+
+    # Non-streaming: buffer and forward as JSON
     async with httpx.AsyncClient(timeout=httpx.Timeout(300.0)) as client:
         resp = await client.request(
             request.method,
