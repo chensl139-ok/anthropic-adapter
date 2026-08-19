@@ -133,7 +133,11 @@ async def _passthrough(request: Request, path: str):
             headers=headers,
             params=request.query_params,
         )
-    return JSONResponse(content=resp.json(), status_code=resp.status_code)
+    try:
+        content = resp.json()
+    except Exception:
+        content = {"raw": resp.text}
+    return JSONResponse(content=content, status_code=resp.status_code)
 
 
 # ---------------------------------------------------------------------------
