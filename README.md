@@ -1,5 +1,7 @@
 # anthropic-adapter
 
+[English](README.md) | [简体中文](README_CN.md)
+
 A lightweight sidecar that translates the **Anthropic Messages API** (`/v1/messages`) into the **OpenAI Chat Completions API** (`/v1/chat/completions`), so any OpenAI-compatible inference backend (vLLM, sglang, TGI, etc.) can serve Anthropic-protocol clients — including tool calls, thinking/reasoning, and streaming.
 
 ## Features
